@@ -84,9 +84,16 @@ Result<ModPlatform::IndexedVersion> FlameMod::loadIndexedPackVersion(const QJson
     TRY_INTO(file.fileId, Json::requireInteger(obj, "id"))
     TRY_INTO(file.date, Json::requireString(obj, "fileDate"))
     TRY_INTO(file.version, Json::requireString(obj, "displayName"))
-    file.downloadUrl = obj["downloadUrl"].toString();
     TRY_INTO(file.fileName, Json::requireString(obj, "fileName"))
     file.fileName = FS::RemoveInvalidPathChars(file.fileName);
+    file.downloadUrl = obj["downloadUrl"].toString();
+    // CurseForge returns an empty downloadUrl for files that allow third-party
+    // distribution. Those files are still served from the CDN under a path that
+    // can be derived from the file id, so build the URL ourselves.
+    if (file.downloadUrl.isEmpty() && !file.fileName.isEmpty() && file.fileId.isValid()) {
+        auto fileId = QString::number(file.fileId.toLongLong());
+        file.downloadUrl = QString("https://edge.forgecdn.net/files/%1/%2/%3").arg(fileId.left(4), fileId.mid(4), file.fileName);
+    }
 
     TRY_INTO(const auto& releaseType, Json::requireInteger(obj, "releaseType"))
     ModPlatform::IndexedVersionType verType;
