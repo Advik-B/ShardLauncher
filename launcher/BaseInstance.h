@@ -54,9 +54,9 @@
 
 #include "RuntimeContext.h"
 #include "minecraft/launch/MinecraftTarget.h"
+#include "tasks/Task.h"
 
 class QDir;
-class Task;
 class LaunchTask;
 class BaseInstance;
 
