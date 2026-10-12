@@ -270,8 +270,8 @@ endif()
 # By using this key in your builds you accept the terms and conditions laid down in
 # https://support.curseforge.com/en/support/solutions/articles/9000207405-curse-forge-3rd-party-api-terms-and-conditions
 # NOTE: CurseForge requires you to change this if you make any kind of derivative work.
-# This key was issued specifically for Prism Launcher
-set(Launcher_CURSEFORGE_API_KEY "$2a$10$wuAJuNZuted3NORVmpgUC.m8sI.pv1tOPKZyBgLFGjxFp/br0lZCC" CACHE STRING "API key for the CurseForge platform")
+# This key was issued specifically for Shard Launcher
+set(Launcher_CURSEFORGE_API_KEY "$2a$10$OduX.AmaLGrdPo/uhPZE6Ob5Iq7/WD9/TRpvmGTA9Boa/ig03NTFS" CACHE STRING "API key for the CurseForge platform")
 
 set(Launcher_COMPILER_NAME ${CMAKE_CXX_COMPILER_ID})
 set(Launcher_COMPILER_VERSION ${CMAKE_CXX_COMPILER_VERSION})
