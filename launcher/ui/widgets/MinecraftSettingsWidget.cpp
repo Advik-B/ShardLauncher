@@ -555,13 +555,9 @@ void MinecraftSettingsWidget::updateAccountsMenu(SettingsObject& settings) const
     for (int i = 0; i < accounts->count(); i++) {
         MinecraftAccountPtr account = accounts->at(i);
 
-        QIcon face = account->getFace();
+        QIcon icon = QIcon::fromTheme("noaccount");
 
-        if (face.isNull()) {
-            face = QIcon::fromTheme("noaccount");
-        }
-
-        m_ui->instanceAccountSelector->addItem(face, account->profileName(), i);
+        m_ui->instanceAccountSelector->addItem(icon, account->profileName(), i);
         if (i == accountIndex) {
             m_ui->instanceAccountSelector->setCurrentIndex(i);
         }

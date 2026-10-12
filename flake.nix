@@ -2,9 +2,9 @@
   description = "A custom launcher for Minecraft that allows you to easily manage multiple installations of Minecraft at once (Fork of MultiMC)";
 
   nixConfig = {
-    extra-substituters = [ "https://prismlauncher.cachix.org" ];
+    extra-substituters = [ "https://shardlauncher.cachix.org" ];
     extra-trusted-public-keys = [
-      "prismlauncher.cachix.org-1:9/n/FGyABA2jLUVfY+DEp4hKds/rwO+SCOtbOkDzd+c="
+      "shardlauncher.cachix.org-1:9/n/FGyABA2jLUVfY+DEp4hKds/rwO+SCOtbOkDzd+c="
     ];
   };
 
@@ -103,14 +103,14 @@
             ```
 
             Feel free to ask any questions in our Discord server or Matrix space:
-              - https://prismlauncher.org/discord
-              - https://matrix.to/#/#prismlauncher:matrix.org
+              - https://shardlauncher.org/discord
+              - https://matrix.to/#/#shardlauncher:matrix.org
 
             And thanks for helping out :)
           '';
 
           # Re-use our package wrapper to wrap our development environment
-          qt-wrapper-env = packages'.prismlauncher.overrideAttrs (old: {
+          qt-wrapper-env = packages'.shardlauncher.overrideAttrs (old: {
             name = "qt-wrapper-env";
 
             # Required to use script-based makeWrapper below
@@ -136,7 +136,7 @@
           default = mkShell {
             name = "prism-launcher";
 
-            inputsFrom = [ packages'.prismlauncher-unwrapped ];
+            inputsFrom = [ packages'.shardlauncher-unwrapped ];
 
             packages = [
               pkgs.ccache
@@ -162,7 +162,7 @@
             ];
 
             cmakeBuildType = "Debug";
-            cmakeFlags = [ "-GNinja" ] ++ packages'.prismlauncher-unwrapped.cmakeFlags;
+            cmakeFlags = [ "-GNinja" ] ++ packages'.shardlauncher-unwrapped.cmakeFlags;
             dontFixCmake = true;
 
             shellHook = ''
@@ -193,7 +193,7 @@
         in
 
         {
-          prismlauncher-unwrapped = prev.callPackage ./nix/unwrapped.nix {
+          shardlauncher-unwrapped = prev.callPackage ./nix/unwrapped.nix {
             inherit (llvm) stdenv;
             inherit
               libnbtplusplus
@@ -201,7 +201,7 @@
               ;
           };
 
-          prismlauncher = final.callPackage ./nix/wrapper.nix { };
+          shardlauncher = final.callPackage ./nix/wrapper.nix { };
         };
 
       packages = forAllSystems (
@@ -211,12 +211,12 @@
           pkgs = nixpkgsFor.${system};
 
           # Build a scope from our overlay
-          prismPackages = lib.makeScope pkgs.newScope (final: self.overlays.default final pkgs);
+          shardPackages = lib.makeScope pkgs.newScope (final: self.overlays.default final pkgs);
 
           # Grab our packages from it and set the default
           packages = {
-            inherit (prismPackages) prismlauncher-unwrapped prismlauncher;
-            default = prismPackages.prismlauncher;
+            inherit (shardPackages) shardlauncher-unwrapped shardlauncher;
+            default = shardPackages.shardlauncher;
           };
         in
 
@@ -234,11 +234,11 @@
         in
 
         {
-          prismlauncher-debug = packages'.prismlauncher.override {
-            prismlauncher-unwrapped = legacyPackages'.prismlauncher-unwrapped-debug;
+          shardlauncher-debug = packages'.shardlauncher.override {
+            shardlauncher-unwrapped = legacyPackages'.shardlauncher-unwrapped-debug;
           };
 
-          prismlauncher-unwrapped-debug = packages'.prismlauncher-unwrapped.overrideAttrs {
+          shardlauncher-unwrapped-debug = packages'.shardlauncher-unwrapped.overrideAttrs {
             cmakeBuildType = "Debug";
             dontStrip = true;
           };

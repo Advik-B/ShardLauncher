@@ -36,7 +36,6 @@
 #pragma once
 
 #include "MinecraftAccount.h"
-#include "minecraft/auth/AuthFlow.h"
 
 #include <QAbstractListModel>
 #include <QObject>
@@ -45,7 +44,7 @@
 #include <QVariant>
 
 /*!
- * List of available Mojang accounts.
+ * List of available offline accounts.
  * This should be loaded in the background by Prism Launcher on startup.
  */
 class AccountList : public QAbstractListModel {
@@ -56,8 +55,6 @@ class AccountList : public QAbstractListModel {
     enum VListColumns {
         // TODO: Add icon column.
         ProfileNameColumn = 0,
-        TypeColumn,
-        StatusColumn,
 
         NUM_COLUMNS
     };
@@ -82,11 +79,6 @@ class AccountList : public QAbstractListModel {
     int findAccountByProfileId(const QString& profileId) const;
     MinecraftAccountPtr getAccountByProfileName(const QString& profileName) const;
     QStringList profileNames() const;
-
-    // requesting a refresh pushes it to the front of the queue
-    void requestRefresh(QString accountId);
-    // queuing a refresh will let it go to the back of the queue (unless it's somewhere inside the queue already)
-    void queueRefresh(QString accountId);
 
     /*!
      * Sets the path to load/save the list file from/to.
@@ -125,29 +117,7 @@ class AccountList : public QAbstractListModel {
      */
     void accountChanged();
 
-    /**
-     * This is called when a (refresh/login) task involving the account starts or ends
-     */
-    void accountActivityChanged(bool active);
-
-    /**
-     * This is initially to run background account refresh tasks, or on a hourly timer
-     */
-    void fillQueue();
-
-   private slots:
-    void tryNext();
-
-    void authSucceeded();
-    void authFailed(QString reason);
-
    protected:
-    QList<QString> m_refreshQueue;
-    QSet<QString> m_explicitRefreshes;
-    QTimer* m_refreshTimer;
-    QTimer* m_nextTimer;
-    shared_qobject_ptr<AuthFlow> m_currentTask;
-
     /*!
      * Called whenever the list changes.
      * This emits the listChanged() signal and autosaves the list (if autosave is enabled).

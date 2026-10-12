@@ -47,7 +47,6 @@
 #include "AuthSession.h"
 #include "QObjectPtr.h"
 #include "Usable.h"
-#include "minecraft/auth/AuthFlow.h"
 
 class Task;
 class MinecraftAccount;
@@ -56,11 +55,7 @@ using MinecraftAccountPtr = shared_qobject_ptr<MinecraftAccount>;
 Q_DECLARE_METATYPE(MinecraftAccountPtr)
 
 /**
- * A profile within someone's Mojang account.
- *
- * Currently, the profile system has not been implemented by Mojang yet,
- * but we might as well add some things for it in Prism Launcher right now so
- * we don't have to rip the code to pieces to add it later.
+ * A profile within someone's account.
  */
 struct AccountProfile {
     QString id;
@@ -69,10 +64,10 @@ struct AccountProfile {
 };
 
 /**
- * Object that stores information about a certain Mojang account.
+ * Object that stores information about an offline player name.
  *
- * Said information may include things such as that account's username, client token, and access
- * token if the user chose to stay logged in.
+ * The name and its derived UUID identify the player; there is no remote
+ * authentication of any kind.
  */
 class MinecraftAccount : public QObject, public Usable {
     Q_OBJECT
@@ -83,8 +78,6 @@ class MinecraftAccount : public QObject, public Usable {
     //! Default constructor
     explicit MinecraftAccount(QObject* parent = 0);
 
-    static MinecraftAccountPtr createBlankMSA();
-
     static MinecraftAccountPtr createOffline(const QString& username);
 
     static MinecraftAccountPtr loadFromJsonV3(const QJsonObject& json);
@@ -93,13 +86,6 @@ class MinecraftAccount : public QObject, public Usable {
 
     //! Saves a MinecraftAccount to a JSON object and returns it.
     QJsonObject saveToJson() const;
-
-   public: /* manipulation */
-    shared_qobject_ptr<AuthFlow> login(bool useDeviceCode = false);
-
-    shared_qobject_ptr<AuthFlow> refresh();
-
-    shared_qobject_ptr<AuthFlow> currentTask();
 
    public: /* queries */
     QString internalId() const { return data.internalId; }
@@ -112,41 +98,11 @@ class MinecraftAccount : public QObject, public Usable {
 
     QString displayName() const;
 
-    bool isActive() const;
-
-    AccountType accountType() const noexcept { return data.type; }
-
-    bool ownsMinecraft() const { return data.type != AccountType::Offline && data.minecraftEntitlement.ownsMinecraft; }
-
     bool hasProfile() const { return data.profileId().size() != 0; }
-
-    QString typeString() const
-    {
-        switch (data.type) {
-            case AccountType::MSA: {
-                return "msa";
-            } break;
-            case AccountType::Offline: {
-                return "offline";
-            } break;
-            default: {
-                return "unknown";
-            }
-        }
-    }
-
-    QPixmap getFace(int width = 64, int height = 64) const;
-
-    //! Returns the current state of the account
-    AccountState accountState() const;
 
     AccountData* accountData() { return &data; }
 
-    bool shouldRefresh() const;
-
     void fillSession(AuthSessionPtr session);
-
-    QString lastError() const { return data.lastError(); }
 
    signals:
     /**
@@ -154,21 +110,10 @@ class MinecraftAccount : public QObject, public Usable {
      */
     void changed();
 
-    void activityChanged(bool active);
-
-    // TODO: better signalling for the various possible state changes - especially errors
-
    protected: /* variables */
     AccountData data;
-
-    // current task we are executing here
-    shared_qobject_ptr<AuthFlow> m_currentTask;
 
    protected: /* methods */
     void incrementUses() override;
     void decrementUses() override;
-
-   private slots:
-    void authSucceeded();
-    void authFailed(QString reason);
 };

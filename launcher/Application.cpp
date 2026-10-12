@@ -70,7 +70,6 @@
 #include "ui/setupwizard/AutoJavaWizardPage.h"
 #include "ui/setupwizard/JavaWizardPage.h"
 #include "ui/setupwizard/LanguageWizardPage.h"
-#include "ui/setupwizard/LoginWizardPage.h"
 #include "ui/setupwizard/PasteWizardPage.h"
 #include "ui/setupwizard/SetupWizard.h"
 #include "ui/setupwizard/ThemeWizardPage.h"
@@ -905,9 +904,6 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
 
         m_settings->registerSetting("WorldTools", "{}");
 
-        // Custom Microsoft Authentication Client ID
-        m_settings->registerSetting("MSAClientIDOverride", "");
-
         // Custom Flame API Key
         m_settings->registerSetting({ "FlameKeyOverride", "CFKeyOverride" }, "");
 
@@ -1027,7 +1023,6 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
         qInfo() << "Loading accounts...";
         m_accounts->setListFilePath("accounts.json", true);
         m_accounts->loadList();
-        m_accounts->fillQueue();
         qInfo() << "<> Accounts loaded.";
     }
 
@@ -1104,7 +1099,7 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
                               "\n"
                               "This likely means that a update attempt failed. Please ensure your installation is in working order before "
                               "proceeding.\n"
-                              "Check the Prism Launcher updater log at: \n"
+                              "Check the Shard Launcher updater log at: \n"
                               "%7\n"
                               "for details on the last update attempt.\n"
                               "\n"
@@ -1144,7 +1139,7 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
                               "\n"
                               "Please ensure your installation is in working order before "
                               "proceeding.\n"
-                              "Check the Prism Launcher updater log at: \n"
+                              "Check the Shard Launcher updater log at: \n"
                               "%1\n"
                               "for details on the last update attempt.")
                                .arg(updateLogPath);
@@ -1179,7 +1174,7 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
             auto infoMsg = tr("Update succeeded\n"
                               "\n"
                               "You are now running %1 .\n"
-                              "Check the Prism Launcher updater log at: \n"
+                              "Check the Shard Launcher updater log at: \n"
                               "%2\n"
                               "for details.")
                                .arg(BuildConfig.printableVersionString())
@@ -1272,9 +1267,8 @@ bool Application::createSetupWizard()
     bool pasteInterventionRequired = settings()->get("PastebinURL") != "";
     bool validWidgets = m_themeManager->isValidApplicationTheme(settings()->get("ApplicationTheme").toString());
     bool validIcons = m_themeManager->isValidIconTheme(settings()->get("IconTheme").toString());
-    bool login = !m_accounts->anyAccountIsValid() && (capabilities().testAnyFlags(Application::SupportsMSA));
     bool themeInterventionRequired = !validWidgets || !validIcons;
-    bool wizardRequired = javaRequired || languageRequired || pasteInterventionRequired || themeInterventionRequired || askjava || login;
+    bool wizardRequired = javaRequired || languageRequired || pasteInterventionRequired || themeInterventionRequired || askjava;
     if (wizardRequired) {
         // set default theme after going into theme wizard
         if (!validIcons) {
@@ -1312,9 +1306,6 @@ bool Application::createSetupWizard()
             setupWizard.addPage(new ThemeWizardPage(&setupWizard));
         }
 
-        if (login) {
-            setupWizard.addPage(new LoginWizardPage(&setupWizard));
-        }
         if (setupWizard.exec() != QDialog::Accepted) {
             qWarning() << "Setup wizard was not completed; continuing with the current settings";
         }
@@ -1880,9 +1871,6 @@ Meta::Index* Application::metadataIndex()
 void Application::updateCapabilities()
 {
     m_capabilities = None;
-    if (!getMSAClientID().isEmpty()) {
-        m_capabilities |= SupportsMSA;
-    }
     if (!getFlameAPIKey().isEmpty()) {
         m_capabilities |= SupportsFlame;
     }
@@ -1930,16 +1918,6 @@ QString Application::getJarPath(const QString& jarFile)
         }
     }
     return {};
-}
-
-QString Application::getMSAClientID()
-{
-    QString clientIDOverride = m_settings->get("MSAClientIDOverride").toString();
-    if (!clientIDOverride.isEmpty()) {
-        return clientIDOverride;
-    }
-
-    return BuildConfig.MSA_CLIENT_ID;
 }
 
 QString Application::getFlameAPIKey()

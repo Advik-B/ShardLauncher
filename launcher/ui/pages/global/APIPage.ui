@@ -229,50 +229,11 @@
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="groupBox_msa">
+        <widget class="QGroupBox" name="groupBox_apiKeys">
          <property name="title">
           <string>&amp;API Keys</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_4">
-          <item>
-           <widget class="QLabel" name="msaClientIDLabel">
-            <property name="text">
-             <string>&amp;Microsoft Authentication</string>
-            </property>
-            <property name="textFormat">
-             <enum>Qt::RichText</enum>
-            </property>
-            <property name="wordWrap">
-             <bool>true</bool>
-            </property>
-            <property name="openExternalLinks">
-             <bool>true</bool>
-            </property>
-            <property name="buddy">
-             <cstring>msaClientID</cstring>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="msaClientID">
-            <property name="placeholderText">
-             <string>Use Default</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="label_3">
-            <property name="text">
-             <string>Note: you probably don't need to set this if logging in via Microsoft Authentication already works.</string>
-            </property>
-            <property name="textFormat">
-             <enum>Qt::RichText</enum>
-            </property>
-            <property name="wordWrap">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
           <item>
            <spacer name="verticalSpacer">
             <property name="orientation">

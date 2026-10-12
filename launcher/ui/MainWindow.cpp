@@ -105,7 +105,6 @@
 #include "ui/dialogs/NewInstanceDialog.h"
 #include "ui/dialogs/NewsDialog.h"
 #include "ui/dialogs/ProgressDialog.h"
-#include "ui/dialogs/skins/SkinManageDialog.h"
 #include "ui/instanceview/InstanceDelegate.h"
 #include "ui/instanceview/InstanceProxyModel.h"
 #include "ui/instanceview/InstanceView.h"
@@ -644,9 +643,6 @@ void MainWindow::repopulateAccountsMenu()
     auto accounts = APPLICATION->accounts();
     MinecraftAccountPtr defaultAccount = accounts->defaultAccount();
 
-    bool canChangeSkin = defaultAccount && (defaultAccount->accountType() == AccountType::MSA) && !defaultAccount->isActive();
-    ui->actionManageSkins->setEnabled(canChangeSkin);
-
     QString active_profileId = "";
     if (defaultAccount) {
         // this can be called before accountMenuButton exists
@@ -674,12 +670,7 @@ void MainWindow::repopulateAccountsMenu()
                 action->setChecked(true);
             }
 
-            auto face = account->getFace();
-            if (!face.isNull()) {
-                action->setIcon(face);
-            } else {
-                action->setIcon(QIcon::fromTheme("noaccount"));
-            }
+            action->setIcon(QIcon::fromTheme("noaccount"));
 
             const int highestNumberKey = 9;
             if (i < highestNumberKey) {
@@ -702,7 +693,6 @@ void MainWindow::repopulateAccountsMenu()
     connect(ui->actionNoDefaultAccount, &QAction::triggered, this, &MainWindow::changeActiveAccount);
 
     ui->accountsMenu->addSeparator();
-    ui->accountsMenu->addAction(ui->actionManageSkins);
     ui->accountsMenu->addAction(ui->actionManageAccounts);
 
     accountsButtonMenu->addActions(ui->accountsMenu->actions());
@@ -744,16 +734,10 @@ void MainWindow::defaultAccountChanged()
 
     MinecraftAccountPtr account = APPLICATION->accounts()->defaultAccount();
 
-    // FIXME: this needs adjustment for MSA
     if (account && account->profileName() != "") {
         auto profileLabel = profileInUseFilter(account->displayName(), account->isInUse());
         ui->actionAccountsButton->setText(profileLabel);
-        auto face = account->getFace();
-        if (face.isNull()) {
-            ui->actionAccountsButton->setIcon(QIcon::fromTheme("noaccount"));
-        } else {
-            ui->actionAccountsButton->setIcon(face);
-        }
+        ui->actionAccountsButton->setIcon(QIcon::fromTheme("noaccount"));
         return;
     }
 
@@ -1045,9 +1029,9 @@ void MainWindow::processURLs(QList<QUrl> urls)
                 emit APPLICATION->oauthReplyRecieved(receivedData);
                 continue;
             } else if ((url.scheme() == "prismlauncher" || url.scheme() == BuildConfig.LAUNCHER_APP_BINARY_NAME) && isExternalURLImport) {
-                // PrismLauncher URL protocol modpack import
-                // works for any prism fork
-                // preferred import format: prismlauncher://import?url=ENCODED
+                // ShardLauncher URL protocol modpack import
+                // also accepts the legacy "prismlauncher" scheme so upstream modpack links keep working
+                // preferred import format: shardlauncher://import?url=ENCODED
                 const auto host = url.host().toLower();
                 const auto path = url.path();
 
@@ -1413,16 +1397,6 @@ void MainWindow::on_actionEditInstance_triggered()
                                      tr("This instance is not editable. It may be broken, invalid, or too old. Check logs for details."),
                                      QMessageBox::Critical)
             ->show();
-    }
-}
-
-void MainWindow::on_actionManageSkins_triggered()
-{
-    auto account = APPLICATION->accounts()->defaultAccount();
-
-    if (account && (account->accountType() == AccountType::MSA) && !account->isActive()) {
-        SkinManageDialog dialog(this, account);
-        dialog.exec();
     }
 }
 

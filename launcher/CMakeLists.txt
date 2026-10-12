@@ -212,32 +212,8 @@ set(MINECRAFT_SOURCES
     minecraft/auth/AccountList.h
     minecraft/auth/AuthSession.cpp
     minecraft/auth/AuthSession.h
-    minecraft/auth/AuthStep.h
     minecraft/auth/MinecraftAccount.cpp
     minecraft/auth/MinecraftAccount.h
-    minecraft/auth/Parsers.cpp
-    minecraft/auth/Parsers.h
-
-    minecraft/auth/AuthFlow.cpp
-    minecraft/auth/AuthFlow.h
-
-    minecraft/auth/steps/EntitlementsStep.cpp
-    minecraft/auth/steps/EntitlementsStep.h
-    minecraft/auth/steps/GetSkinStep.cpp
-    minecraft/auth/steps/GetSkinStep.h
-    minecraft/auth/steps/LauncherLoginStep.cpp
-    minecraft/auth/steps/LauncherLoginStep.h
-    minecraft/auth/steps/MinecraftProfileStep.cpp
-    minecraft/auth/steps/MinecraftProfileStep.h
-    minecraft/auth/steps/MSADeviceCodeStep.cpp
-    minecraft/auth/steps/MSADeviceCodeStep.h
-    minecraft/auth/steps/MSAStep.cpp
-    minecraft/auth/steps/MSAStep.h
-    minecraft/auth/steps/XboxAuthorizationStep.cpp
-    minecraft/auth/steps/XboxAuthorizationStep.h
-    minecraft/auth/steps/XboxUserStep.cpp
-    minecraft/auth/steps/XboxUserStep.h
-
     minecraft/update/AssetUpdateTask.h
     minecraft/update/AssetUpdateTask.cpp
     minecraft/update/LegacyFMLLibrariesTask.cpp
@@ -365,14 +341,6 @@ set(MINECRAFT_SOURCES
     # Assets
     minecraft/AssetsUtils.h
     minecraft/AssetsUtils.cpp
-
-    # Minecraft skins
-    minecraft/skins/SkinRequests.cpp
-    minecraft/skins/SkinRequests.h
-    minecraft/skins/SkinModel.cpp
-    minecraft/skins/SkinModel.h
-    minecraft/skins/SkinList.cpp
-    minecraft/skins/SkinList.h
 
     minecraft/Agent.h)
 
@@ -846,8 +814,6 @@ SET(LAUNCHER_SOURCES
     ui/setupwizard/ThemeWizardPage.h
     ui/setupwizard/AutoJavaWizardPage.cpp
     ui/setupwizard/AutoJavaWizardPage.h
-    ui/setupwizard/LoginWizardPage.cpp
-    ui/setupwizard/LoginWizardPage.h
 
     # GUI - themes
     ui/themes/FusionTheme.cpp
@@ -1037,8 +1003,6 @@ SET(LAUNCHER_SOURCES
     ui/dialogs/AboutDialog.h
     ui/dialogs/ProfileSelectDialog.cpp
     ui/dialogs/ProfileSelectDialog.h
-    ui/dialogs/ProfileSetupDialog.cpp
-    ui/dialogs/ProfileSetupDialog.h
     ui/dialogs/CopyInstanceDialog.cpp
     ui/dialogs/CopyInstanceDialog.h
     ui/dialogs/CreateShortcutDialog.cpp
@@ -1055,8 +1019,6 @@ SET(LAUNCHER_SOURCES
     ui/dialogs/IconPickerDialog.h
     ui/dialogs/ImportResourceDialog.cpp
     ui/dialogs/ImportResourceDialog.h
-    ui/dialogs/MSALoginDialog.cpp
-    ui/dialogs/MSALoginDialog.h
     ui/dialogs/NetworkJobFailedDialog.cpp
     ui/dialogs/NetworkJobFailedDialog.h
     ui/dialogs/NewComponentDialog.cpp
@@ -1089,16 +1051,6 @@ SET(LAUNCHER_SOURCES
     ui/dialogs/ChooseOfflineNameDialog.h
     ui/dialogs/UntrustedModsDialog.cpp
     ui/dialogs/UntrustedModsDialog.h
-
-    ui/dialogs/skins/SkinManageDialog.cpp
-    ui/dialogs/skins/SkinManageDialog.h
-
-    ui/dialogs/skins/draw/SkinOpenGLWindow.h
-    ui/dialogs/skins/draw/SkinOpenGLWindow.cpp
-    ui/dialogs/skins/draw/Scene.h
-    ui/dialogs/skins/draw/Scene.cpp
-    ui/dialogs/skins/draw/BoxGeometry.h
-    ui/dialogs/skins/draw/BoxGeometry.cpp
 
     # GUI - widgets
     ui/widgets/CheckComboBox.cpp
@@ -1279,7 +1231,6 @@ target_link_libraries(Launcher_logic
     Qt${QT_VERSION_MAJOR}::Concurrent
     Qt${QT_VERSION_MAJOR}::Gui
     Qt${QT_VERSION_MAJOR}::Widgets
-    Qt${QT_VERSION_MAJOR}::NetworkAuth
     Qt${QT_VERSION_MAJOR}::OpenGL
     ${Launcher_QT_DBUS}
     ${Launcher_QT_LIBS}

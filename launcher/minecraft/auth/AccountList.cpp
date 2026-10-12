@@ -35,7 +35,6 @@
 
 #include "AccountList.h"
 #include "AccountData.h"
-#include "tasks/Task.h"
 
 #include <QDir>
 #include <QFile>
@@ -46,7 +45,6 @@
 #include <QJsonObject>
 #include <QJsonParseError>
 #include <QTextStream>
-#include <QTimer>
 #include "Json.h"
 
 #include <QDebug>
@@ -56,15 +54,7 @@
 
 enum AccountListVersion { MojangMSA = 3 };
 
-AccountList::AccountList(QObject* parent) : QAbstractListModel(parent)
-{
-    m_refreshTimer = new QTimer(this);
-    m_refreshTimer->setSingleShot(true);
-    connect(m_refreshTimer, &QTimer::timeout, this, &AccountList::fillQueue);
-    m_nextTimer = new QTimer(this);
-    m_nextTimer->setSingleShot(true);
-    connect(m_nextTimer, &QTimer::timeout, this, &AccountList::tryNext);
-}
+AccountList::AccountList(QObject* parent) : QAbstractListModel(parent) {}
 
 AccountList::~AccountList() noexcept {}
 
@@ -119,7 +109,6 @@ void AccountList::addAccount(const MinecraftAccountPtr account)
 
     // hook up notifications for changes in the account
     connect(account.get(), &MinecraftAccount::changed, this, &AccountList::accountChanged);
-    connect(account.get(), &MinecraftAccount::activityChanged, this, &AccountList::accountActivityChanged);
 
     // override/replace existing account with the same profileId
     auto profileId = account->profileId();
@@ -239,27 +228,6 @@ void AccountList::accountChanged()
     onListChanged();
 }
 
-void AccountList::accountActivityChanged(bool active)
-{
-    MinecraftAccount* account = qobject_cast<MinecraftAccount*>(sender());
-    bool found = false;
-    for (int i = 0; i < count(); i++) {
-        if (at(i).get() == account) {
-            emit dataChanged(index(i), index(i, columnCount(QModelIndex()) - 1));
-            found = true;
-            break;
-        }
-    }
-    if (found) {
-        emit listActivityChanged();
-        if (active) {
-            beginActivity();
-        } else {
-            endActivity();
-        }
-    }
-}
-
 void AccountList::onListChanged()
 {
     if (m_autosave)
@@ -282,30 +250,6 @@ int AccountList::count() const
     return m_accounts.count();
 }
 
-QString getAccountStatus(AccountState status)
-{
-    switch (status) {
-        case AccountState::Unchecked:
-            return QObject::tr("Unchecked", "Account status");
-        case AccountState::Offline:
-            return QObject::tr("Offline", "Account status");
-        case AccountState::Online:
-            return QObject::tr("Ready", "Account status");
-        case AccountState::Working:
-            return QObject::tr("Working", "Account status");
-        case AccountState::Errored:
-            return QObject::tr("Errored", "Account status");
-        case AccountState::Expired:
-            return QObject::tr("Expired", "Account status");
-        case AccountState::Disabled:
-            return QObject::tr("Disabled", "Account status");
-        case AccountState::Gone:
-            return QObject::tr("Gone", "Account status");
-        default:
-            return QObject::tr("Unknown", "Account status");
-    }
-}
-
 QVariant AccountList::data(const QModelIndex& index, int role) const
 {
     if (!index.isValid())
@@ -325,13 +269,7 @@ QVariant AccountList::data(const QModelIndex& index, int role) const
             return QVariant();
         case Qt::DecorationRole:
             if (index.column() == ProfileNameColumn) {
-                auto face = account->getFace(24, 24);
-
-                if (!face.isNull()) {
-                    return face;
-                } else {
-                    return QIcon::fromTheme("noaccount").pixmap(24, 24);
-                }
+                return QIcon::fromTheme("noaccount").pixmap(24, 24);
             }
 
             return QVariant();
@@ -339,19 +277,6 @@ QVariant AccountList::data(const QModelIndex& index, int role) const
             switch (index.column()) {
                 case ProfileNameColumn:
                     return account->profileName();
-                case TypeColumn: {
-                    switch (account->accountType()) {
-                        case AccountType::MSA: {
-                            return tr("MSA", "Account type");
-                        }
-                        case AccountType::Offline: {
-                            return tr("Offline", "Account type");
-                        }
-                    }
-                    return tr("Unknown", "Account type");
-                }
-                case StatusColumn:
-                    return getAccountStatus(account->accountState());
                 default:
                     return QVariant();
             }
@@ -376,10 +301,6 @@ QVariant AccountList::headerData(int section, [[maybe_unused]] Qt::Orientation o
             switch (section) {
                 case ProfileNameColumn:
                     return tr("Username");
-                case TypeColumn:
-                    return tr("Type");
-                case StatusColumn:
-                    return tr("Status");
                 default:
                     return QVariant();
             }
@@ -388,10 +309,6 @@ QVariant AccountList::headerData(int section, [[maybe_unused]] Qt::Orientation o
             switch (section) {
                 case ProfileNameColumn:
                     return tr("Minecraft username associated with the account.");
-                case TypeColumn:
-                    return tr("Type of the account (MSA or Offline)");
-                case StatusColumn:
-                    return tr("Current status of the account.");
                 default:
                     return QVariant();
             }
@@ -497,7 +414,6 @@ bool AccountList::loadV3(QJsonObject& root)
                 }
             }
             connect(account.get(), &MinecraftAccount::changed, this, &AccountList::accountChanged);
-            connect(account.get(), &MinecraftAccount::activityChanged, this, &AccountList::accountActivityChanged);
             m_accounts.append(account);
             if (accountObj.value("active").toBool(false)) {
                 m_defaultAccount = account;
@@ -584,108 +500,7 @@ void AccountList::setListFilePath(QString path, bool autosave)
 
 bool AccountList::anyAccountIsValid()
 {
-    for (auto account : m_accounts) {
-        if (account->ownsMinecraft()) {
-            return true;
-        }
-    }
-    return false;
-}
-
-void AccountList::fillQueue()
-{
-    if (m_defaultAccount && m_defaultAccount->shouldRefresh()) {
-        auto idToRefresh = m_defaultAccount->internalId();
-        m_refreshQueue.push_back(idToRefresh);
-        qDebug() << "AccountList: Queued default account with internal ID" << idToRefresh << "to refresh first";
-    }
-
-    for (int i = 0; i < count(); i++) {
-        auto account = at(i);
-        if (account == m_defaultAccount) {
-            continue;
-        }
-
-        if (account->shouldRefresh()) {
-            auto idToRefresh = account->internalId();
-            queueRefresh(idToRefresh);
-        }
-    }
-    tryNext();
-}
-
-void AccountList::requestRefresh(QString accountId)
-{
-    auto index = m_refreshQueue.indexOf(accountId);
-    if (index != -1) {
-        m_refreshQueue.removeAt(index);
-    }
-    m_refreshQueue.push_front(accountId);
-    m_explicitRefreshes.insert(accountId);
-    qDebug() << "AccountList: Pushed account with internal ID" << accountId << "to the front of the queue";
-    if (!isActive()) {
-        tryNext();
-    }
-}
-
-void AccountList::queueRefresh(QString accountId)
-{
-    if (m_refreshQueue.indexOf(accountId) != -1) {
-        return;
-    }
-    m_refreshQueue.push_back(accountId);
-    qDebug() << "AccountList: Queued account with internal ID" << accountId << "to refresh";
-}
-
-void AccountList::tryNext()
-{
-    while (m_refreshQueue.length()) {
-        auto accountId = m_refreshQueue.front();
-        m_refreshQueue.pop_front();
-        bool found = false;
-        for (int i = 0; i < count(); i++) {
-            auto account = at(i);
-            if (account->internalId() == accountId) {
-                found = true;
-                bool wasRequested = m_explicitRefreshes.remove(accountId);
-                if (!wasRequested && !account->shouldRefresh()) {
-                    // Account no longer needs refreshing, skip it.
-                    qDebug() << "RefreshSchedule: Skipping account" << account->profileName() << "with internal ID" << accountId
-                             << "(no longer needs refresh)";
-                    break;
-                }
-                m_currentTask = account->refresh();
-                if (m_currentTask) {
-                    connect(m_currentTask.get(), &Task::succeeded, this, &AccountList::authSucceeded);
-                    connect(m_currentTask.get(), &Task::failed, this, &AccountList::authFailed);
-                    m_currentTask->start();
-                    qDebug() << "RefreshSchedule: Processing account" << account->profileName() << "with internal ID" << accountId;
-                    return;
-                }
-                break;
-            }
-        }
-        if (!found) {
-            m_explicitRefreshes.remove(accountId);
-            qDebug() << "RefreshSchedule: Account with internal ID" << accountId << "not found.";
-        }
-    }
-    // if we get here, no account needed refreshing. Schedule refresh in an hour.
-    m_refreshTimer->start(1000 * 3600);
-}
-
-void AccountList::authSucceeded()
-{
-    qDebug() << "RefreshSchedule: Background account refresh succeeded";
-    m_currentTask.reset();
-    m_nextTimer->start(1000 * 20);
-}
-
-void AccountList::authFailed(QString reason)
-{
-    qDebug() << "RefreshSchedule: Background account refresh failed:" << reason;
-    m_currentTask.reset();
-    m_nextTimer->start(1000 * 20);
+    return count() > 0;
 }
 
 bool AccountList::isActive() const

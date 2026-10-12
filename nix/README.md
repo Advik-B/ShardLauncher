@@ -1,8 +1,8 @@
-# Prism Launcher Nix Packaging
+# Shard Launcher Nix Packaging
 
 ## Installing a stable release (nixpkgs)
 
-Prism Launcher is packaged in [nixpkgs](https://github.com/NixOS/nixpkgs/) since 22.11.
+Shard Launcher is packaged in [nixpkgs](https://github.com/NixOS/nixpkgs/) since 22.11.
 
 Check the [NixOS Wiki](https://wiki.nixos.org/wiki/Prism_Launcher) for up-to-date instructions.
 
@@ -17,10 +17,10 @@ Example (NixOS):
 ```nix
 {
   nix.settings = {
-    trusted-substituters = [ "https://prismlauncher.cachix.org" ];
+    trusted-substituters = [ "https://shardlauncher.cachix.org" ];
 
     trusted-public-keys = [
-      "prismlauncher.cachix.org-1:9/n/FGyABA2jLUVfY+DEp4hKds/rwO+SCOtbOkDzd+c="
+      "shardlauncher.cachix.org-1:9/n/FGyABA2jLUVfY+DEp4hKds/rwO+SCOtbOkDzd+c="
     ];
   };
 }
@@ -28,7 +28,7 @@ Example (NixOS):
 
 ### Installing the package directly
 
-After adding `github:PrismLauncher/PrismLauncher` to your flake inputs, you can access the flake's `packages` output.
+After adding `github:Advik-B/ShardLauncher` to your flake inputs, you can access the flake's `packages` output.
 
 Example:
 
@@ -37,10 +37,10 @@ Example:
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
-    prismlauncher = {
-      url = "github:PrismLauncher/PrismLauncher";
+    shardlauncher = {
+      url = "github:Advik-B/ShardLauncher";
 
-      # Optional: Override the nixpkgs input of prismlauncher to use the same revision as the rest of your flake
+      # Optional: Override the nixpkgs input of shardlauncher to use the same revision as the rest of your flake
       # Note that this may break the reproducibility mentioned above, and you might not be able to access the binary cache
       #
       # inputs.nixpkgs.follows = "nixpkgs";
@@ -48,7 +48,7 @@ Example:
   };
 
   outputs =
-    { nixpkgs, prismlauncher, ... }:
+    { nixpkgs, shardlauncher, ... }:
     {
       nixosConfigurations.foo = nixpkgs.lib.nixosSystem {
         modules = [
@@ -57,7 +57,7 @@ Example:
           (
             { pkgs, ... }:
             {
-              environment.systemPackages = [ prismlauncher.packages.${pkgs.system}.prismlauncher ];
+              environment.systemPackages = [ shardlauncher.packages.${pkgs.system}.shardlauncher ];
             }
           )
         ];
@@ -82,10 +82,10 @@ Example:
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
-    prismlauncher = {
-      url = "github:PrismLauncher/PrismLauncher";
+    shardlauncher = {
+      url = "github:Advik-B/ShardLauncher";
 
-      # Optional: Override the nixpkgs input of prismlauncher to use the same revision as the rest of your flake
+      # Optional: Override the nixpkgs input of shardlauncher to use the same revision as the rest of your flake
       # Note that this may break the reproducibility mentioned above, and you might not be able to access the binary cache
       #
       # inputs.nixpkgs.follows = "nixpkgs";
@@ -93,7 +93,7 @@ Example:
   };
 
   outputs =
-    { nixpkgs, prismlauncher, ... }:
+    { nixpkgs, shardlauncher, ... }:
     {
       nixosConfigurations.foo = nixpkgs.lib.nixosSystem {
         modules = [
@@ -102,9 +102,9 @@ Example:
           (
             { pkgs, ... }:
             {
-              nixpkgs.overlays = [ prismlauncher.overlays.default ];
+              nixpkgs.overlays = [ shardlauncher.overlays.default ];
 
-              environment.systemPackages = [ pkgs.prismlauncher ];
+              environment.systemPackages = [ pkgs.shardlauncher ];
             }
           )
         ];
@@ -120,11 +120,11 @@ You can simply call the default package of this flake.
 Example:
 
 ```shell
-nix run github:PrismLauncher/PrismLauncher
+nix run github:Advik-B/ShardLauncher
 
-nix shell github:PrismLauncher/PrismLauncher
+nix shell github:Advik-B/ShardLauncher
 
-nix profile install github:PrismLauncher/PrismLauncher
+nix profile install github:Advik-B/ShardLauncher
 ```
 
 ## Installing a development release (without flakes)
@@ -137,10 +137,10 @@ Example (NixOS):
 ```nix
 {
   nix.settings = {
-    trusted-substituters = [ "https://prismlauncher.cachix.org" ];
+    trusted-substituters = [ "https://shardlauncher.cachix.org" ];
 
     trusted-public-keys = [
-      "prismlauncher.cachix.org-1:9/n/FGyABA2jLUVfY+DEp4hKds/rwO+SCOtbOkDzd+c="
+      "shardlauncher.cachix.org-1:9/n/FGyABA2jLUVfY+DEp4hKds/rwO+SCOtbOkDzd+c="
     ];
   };
 }
@@ -157,8 +157,8 @@ Example:
 {
   environment.systemPackages = [
     (import (
-      builtins.fetchTarball "https://github.com/PrismLauncher/PrismLauncher/archive/develop.tar.gz"
-    )).packages.${pkgs.system}.prismlauncher
+      builtins.fetchTarball "https://github.com/Advik-B/ShardLauncher/archive/develop.tar.gz"
+    )).packages.${pkgs.system}.shardlauncher
   ];
 }
 ```
@@ -175,11 +175,11 @@ Example:
 {
   nixpkgs.overlays = [
     (import (
-      builtins.fetchTarball "https://github.com/PrismLauncher/PrismLauncher/archive/develop.tar.gz"
+      builtins.fetchTarball "https://github.com/Advik-B/ShardLauncher/archive/develop.tar.gz"
     )).overlays.default
   ];
 
-  environment.systemPackages = [ pkgs.prismlauncher ];
+  environment.systemPackages = [ pkgs.shardlauncher ];
 }
 ```
 
@@ -190,23 +190,23 @@ You can add this repository as a channel and install its packages that way.
 Example:
 
 ```shell
-nix-channel --add https://github.com/PrismLauncher/PrismLauncher/archive/develop.tar.gz prismlauncher
+nix-channel --add https://github.com/Advik-B/ShardLauncher/archive/develop.tar.gz shardlauncher
 
-nix-channel --update prismlauncher
+nix-channel --update shardlauncher
 
-nix-env -iA prismlauncher.prismlauncher
+nix-env -iA shardlauncher.shardlauncher
 ```
 
 ## Package variants
 
 Both Nixpkgs and this repository offer the following packages:
 
-- `prismlauncher` - The preferred build, wrapped with everything necessary to run the launcher and Minecraft
-- `prismlauncher-unwrapped` - A minimal build that allows for advanced customization of the launcher's runtime environment
+- `shardlauncher` - The preferred build, wrapped with everything necessary to run the launcher and Minecraft
+- `shardlauncher-unwrapped` - A minimal build that allows for advanced customization of the launcher's runtime environment
 
 ### Customizing wrapped packages
 
-The wrapped package (`prismlauncher`) offers some build parameters to further customize the launcher's environment.
+The wrapped package (`shardlauncher`) offers some build parameters to further customize the launcher's environment.
 
 The following parameters can be overridden:
 

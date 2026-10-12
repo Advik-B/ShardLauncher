@@ -35,7 +35,6 @@
  */
 
 #include "AccountListPage.h"
-#include "ui/dialogs/skins/SkinManageDialog.h"
 #include "ui_AccountListPage.h"
 
 #include <QItemSelectionModel>
@@ -46,7 +45,6 @@
 
 #include "ui/dialogs/ChooseOfflineNameDialog.h"
 #include "ui/dialogs/CustomMessageBox.h"
-#include "ui/dialogs/MSALoginDialog.h"
 
 #include "Application.h"
 
@@ -55,7 +53,7 @@ AccountListPage::AccountListPage(QWidget* parent) : QMainWindow(parent), ui(new 
     ui->setupUi(this);
     ui->listView->setEmptyString(
         tr("Welcome!\n"
-           "If you're new here, you can select the \"Add Microsoft\" button to link your Microsoft account."));
+           "If you're new here, you can select the \"Add Offline\" button to add an offline account."));
     ui->listView->setEmptyMode(VersionListView::String);
     ui->listView->setContextMenuPolicy(Qt::CustomContextMenu);
 
@@ -63,8 +61,6 @@ AccountListPage::AccountListPage(QWidget* parent) : QMainWindow(parent), ui(new 
 
     ui->listView->setModel(m_accounts);
     ui->listView->header()->setSectionResizeMode(AccountList::VListColumns::ProfileNameColumn, QHeaderView::Stretch);
-    ui->listView->header()->setSectionResizeMode(AccountList::VListColumns::TypeColumn, QHeaderView::ResizeToContents);
-    ui->listView->header()->setSectionResizeMode(AccountList::VListColumns::StatusColumn, QHeaderView::ResizeToContents);
     ui->listView->setSelectionMode(QAbstractItemView::SingleSelection);
 
     // Expand the account column
@@ -78,16 +74,9 @@ AccountListPage::AccountListPage(QWidget* parent) : QMainWindow(parent), ui(new 
             [this](const QModelIndex& index) { m_accounts->setDefaultAccount(m_accounts->at(index.row())); });
 
     connect(m_accounts, &AccountList::listChanged, this, &AccountListPage::listChanged);
-    connect(m_accounts, &AccountList::listActivityChanged, this, &AccountListPage::listChanged);
     connect(m_accounts, &AccountList::defaultAccountChanged, this, &AccountListPage::listChanged);
 
     updateButtonStates();
-
-    // Xbox authentication won't work without a client identifier, so disable the button if it is missing
-    if (~APPLICATION->capabilities() & Application::SupportsMSA) {
-        ui->actionAddMicrosoft->setVisible(false);
-        ui->actionAddMicrosoft->setToolTip(tr("No Microsoft Authentication client ID was set."));
-    }
 }
 
 AccountListPage::~AccountListPage()
@@ -127,34 +116,14 @@ void AccountListPage::listChanged()
     updateButtonStates();
 }
 
-void AccountListPage::on_actionAddMicrosoft_triggered()
-{
-    auto account = MSALoginDialog::newAccount(this);
-    if (account) {
-        m_accounts->addAccount(account);
-        if (m_accounts->count() == 1) {
-            m_accounts->setDefaultAccount(account);
-        }
-    }
-}
-
 void AccountListPage::on_actionAddOffline_triggered()
 {
-    if (!m_accounts->anyAccountIsValid()) {
-        QMessageBox::warning(this, tr("Error"),
-                             tr("You must add a Microsoft account that owns Minecraft before you can add an offline account."
-                                "<br><br>"
-                                "If you have lost your account you can contact Microsoft for support."));
-        return;
-    }
-
     ChooseOfflineNameDialog dialog(tr("Please enter your desired username to add your offline account."), this);
     if (dialog.exec() != QDialog::Accepted) {
         return;
     }
 
     if (const MinecraftAccountPtr account = MinecraftAccount::createOffline(dialog.getUsername())) {
-        account->login()->start();  // The task will complete here.
         m_accounts->addAccount(account);
         if (m_accounts->count() == 1) {
             m_accounts->setDefaultAccount(account);
@@ -174,16 +143,6 @@ void AccountListPage::on_actionRemove_triggered()
     if (selection.size() > 0) {
         QModelIndex selected = selection.first();
         m_accounts->removeAccount(selected);
-    }
-}
-
-void AccountListPage::on_actionRefresh_triggered()
-{
-    QModelIndexList selection = ui->listView->selectionModel()->selectedIndexes();
-    if (selection.size() > 0) {
-        QModelIndex selected = selection.first();
-        MinecraftAccountPtr account = selected.data(AccountList::PointerRole).value<MinecraftAccountPtr>();
-        m_accounts->requestRefresh(account->internalId());
     }
 }
 
@@ -208,14 +167,12 @@ void AccountListPage::updateButtonStates()
     QModelIndexList selection = ui->listView->selectionModel()->selectedIndexes();
     bool hasSelection = !selection.empty();
     bool accountIsReady = false;
-    bool accountIsOnline = false;
     bool accountCanMoveUp = false;
     bool accountCanMoveDown = false;
     if (hasSelection) {
         QModelIndex selected = selection.first();
         MinecraftAccountPtr account = selected.data(AccountList::PointerRole).value<MinecraftAccountPtr>();
-        accountIsReady = !account->isActive();
-        accountIsOnline = account->accountType() != AccountType::Offline;
+        accountIsReady = account != nullptr;
 
         accountCanMoveUp = selected.row() > 0;
         int indexOfLast = m_accounts->count() - 1;
@@ -223,8 +180,6 @@ void AccountListPage::updateButtonStates()
     }
     ui->actionRemove->setEnabled(accountIsReady);
     ui->actionSetDefault->setEnabled(accountIsReady);
-    ui->actionManageSkins->setEnabled(accountIsReady && accountIsOnline);
-    ui->actionRefresh->setEnabled(accountIsReady && accountIsOnline);
 
     if (m_accounts->defaultAccount().get() == nullptr) {
         ui->actionNoDefault->setEnabled(false);
@@ -235,18 +190,6 @@ void AccountListPage::updateButtonStates()
     }
     ui->actionMoveUp->setEnabled(accountCanMoveUp);
     ui->actionMoveDown->setEnabled(accountCanMoveDown);
-    ui->listView->resizeColumnToContents(3);
-}
-
-void AccountListPage::on_actionManageSkins_triggered()
-{
-    QModelIndexList selection = ui->listView->selectionModel()->selectedIndexes();
-    if (selection.size() > 0) {
-        QModelIndex selected = selection.first();
-        MinecraftAccountPtr account = selected.data(AccountList::PointerRole).value<MinecraftAccountPtr>();
-        SkinManageDialog dialog(this, account);
-        dialog.exec();
-    }
 }
 
 void AccountListPage::on_actionMoveUp_triggered()

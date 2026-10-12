@@ -329,11 +329,7 @@ void MinecraftInstance::populateLaunchMenu(QMenu* menu)
         for (int i = 0; i < accounts->count(); i++) {
             MinecraftAccountPtr account = accounts->at(i);
             QAction* action = launchAsMenu->addAction(account->displayName());
-            if (auto face = account->getFace(); !face.isNull()) {
-                action->setIcon(face);
-            } else {
-                action->setIcon(QIcon::fromTheme("noaccount"));
-            }
+            action->setIcon(QIcon::fromTheme("noaccount"));
             connect(action, &QAction::triggered, this,
                     [this, account] { APPLICATION->launch(this, LaunchMode::Normal, nullptr, account); });
         }

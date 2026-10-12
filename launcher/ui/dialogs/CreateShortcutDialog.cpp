@@ -109,8 +109,7 @@ CreateShortcutDialog::CreateShortcutDialog(MinecraftInstance* instance, QWidget*
             auto profileLabel = account->profileName();
             if (account->isInUse())
                 profileLabel = tr("%1 (in use)").arg(profileLabel);
-            auto face = account->getFace();
-            QIcon icon = face.isNull() ? QIcon::fromTheme("noaccount") : face;
+            QIcon icon = QIcon::fromTheme("noaccount");
             ui->accountSelectionBox->addItem(profileLabel, account->profileName());
             ui->accountSelectionBox->setItemIcon(i, icon);
             if (defaultAccount == account)

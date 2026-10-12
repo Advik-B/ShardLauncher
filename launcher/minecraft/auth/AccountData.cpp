@@ -246,37 +246,6 @@ MinecraftProfile profileFromJSONV3(const QJsonObject& parent, const char* tokenN
     return out;
 }
 
-void entitlementToJSONV3(QJsonObject& parent, MinecraftEntitlement p)
-{
-    if (p.validity == Validity::None) {
-        return;
-    }
-    QJsonObject out;
-    out["ownsMinecraft"] = QJsonValue(p.ownsMinecraft);
-    out["canPlayMinecraft"] = QJsonValue(p.canPlayMinecraft);
-    parent["entitlement"] = out;
-}
-
-bool entitlementFromJSONV3(const QJsonObject& parent, MinecraftEntitlement& out)
-{
-    auto entitlementObject = parent.value("entitlement").toObject();
-    if (entitlementObject.isEmpty()) {
-        return false;
-    }
-    {
-        auto ownsMinecraftV = entitlementObject.value("ownsMinecraft");
-        auto canPlayMinecraftV = entitlementObject.value("canPlayMinecraft");
-        if (!ownsMinecraftV.isBool() || !canPlayMinecraftV.isBool()) {
-            qWarning() << "mandatory attributes are missing or of unexpected type";
-            return false;
-        }
-        out.canPlayMinecraft = canPlayMinecraftV.toBool(false);
-        out.ownsMinecraft = ownsMinecraftV.toBool(false);
-        out.validity = Validity::Assumed;
-    }
-    return true;
-}
-
 }  // namespace
 
 bool AccountData::resumeStateFromV3(QJsonObject data)
@@ -286,24 +255,9 @@ bool AccountData::resumeStateFromV3(QJsonObject data)
         qWarning() << "Failed to parse account data: type is missing.";
         return false;
     }
-    auto typeS = typeV.toString();
-    if (typeS == "MSA") {
-        type = AccountType::MSA;
-    } else if (typeS == "Offline") {
-        type = AccountType::Offline;
-    } else {
+    if (typeV.toString() != "Offline") {
         qWarning() << "Failed to parse account data: type is not recognized.";
         return false;
-    }
-
-    if (type == AccountType::MSA) {
-        auto clientIDV = data.value("msa-client-id");
-        if (clientIDV.isString()) {
-            msaClientID = clientIDV.toString();
-        }  // leave msaClientID empty if it doesn't exist or isn't a string
-        msaToken = tokenFromJSONV3(data, "msa");
-        userToken = tokenFromJSONV3(data, "utoken");
-        mojangservicesToken = tokenFromJSONV3(data, "xrp-mc");
     }
 
     yggdrasilToken = tokenFromJSONV3(data, "ygg");
@@ -312,13 +266,6 @@ bool AccountData::resumeStateFromV3(QJsonObject data)
         yggdrasilToken.token = "0";
 
     minecraftProfile = profileFromJSONV3(data, "profile");
-    if (!entitlementFromJSONV3(data, minecraftEntitlement)) {
-        if (minecraftProfile.validity != Validity::None) {
-            minecraftEntitlement.canPlayMinecraft = true;
-            minecraftEntitlement.ownsMinecraft = true;
-            minecraftEntitlement.validity = Validity::Assumed;
-        }
-    }
 
     validity_ = minecraftProfile.validity;
     return true;
@@ -327,19 +274,10 @@ bool AccountData::resumeStateFromV3(QJsonObject data)
 QJsonObject AccountData::saveState() const
 {
     QJsonObject output;
-    if (type == AccountType::MSA) {
-        output["type"] = "MSA";
-        output["msa-client-id"] = msaClientID;
-        tokenToJSONV3(output, msaToken, "msa");
-        tokenToJSONV3(output, userToken, "utoken");
-        tokenToJSONV3(output, mojangservicesToken, "xrp-mc");
-    } else if (type == AccountType::Offline) {
-        output["type"] = "Offline";
-    }
+    output["type"] = "Offline";
 
     tokenToJSONV3(output, yggdrasilToken, "ygg");
     profileToJSONV3(output, minecraftProfile, "profile");
-    entitlementToJSONV3(output, minecraftEntitlement);
     return output;
 }
 
@@ -360,9 +298,4 @@ QString AccountData::profileName() const
     }
 
     return minecraftProfile.name;
-}
-
-QString AccountData::lastError() const
-{
-    return errorString;
 }

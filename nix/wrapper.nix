@@ -24,7 +24,7 @@
   openal,
   pciutils,
   pipewire,
-  prismlauncher-unwrapped,
+  shardlauncher-unwrapped,
   sdl3,
   stdenv,
   symlinkJoin,
@@ -44,7 +44,6 @@
     jdk17
     jdk8
   ],
-  msaClientID ? null,
   textToSpeechSupport ? stdenv.hostPlatform.isLinux,
 }:
 
@@ -57,13 +56,13 @@ assert lib.assertMsg (
 ) "textToSpeechSupport only has an effect on Linux.";
 
 let
-  prismlauncher' = prismlauncher-unwrapped.override { inherit msaClientID; };
+  shardlauncher' = shardlauncher-unwrapped;
 in
 
 symlinkJoin {
-  name = "prismlauncher-${prismlauncher'.version}";
+  name = "shardlauncher-${shardlauncher'.version}";
 
-  paths = [ prismlauncher' ];
+  paths = [ shardlauncher' ];
 
   nativeBuildInputs = [
     kdePackages.wrapQtAppsHook
@@ -130,8 +129,8 @@ symlinkJoin {
 
     in
     [
-      "--set NIX_LAUNCHER_WRAPPER ${placeholder "out"}/bin/prismlauncher"
-      "--prefix PRISMLAUNCHER_JAVA_PATHS : ${lib.makeSearchPath "bin/java" jdks}"
+      "--set NIX_LAUNCHER_WRAPPER ${placeholder "out"}/bin/shardlauncher"
+      "--prefix SHARDLAUNCHER_JAVA_PATHS : ${lib.makeSearchPath "bin/java" jdks}"
     ]
     ++ lib.optionals stdenv.hostPlatform.isLinux [
       "--set LD_LIBRARY_PATH ${addDriverRunpath.driverLink}/lib:${lib.makeLibraryPath runtimeLibs}"
@@ -139,7 +138,7 @@ symlinkJoin {
     ];
 
   meta = {
-    inherit (prismlauncher'.meta)
+    inherit (shardlauncher'.meta)
       description
       longDescription
       homepage

@@ -1028,13 +1028,13 @@ void PrismUpdaterApp::backupAppDir()
     if (fileList.isEmpty()) {
         // best guess
         if (BuildConfig.BUILD_ARTIFACT.toLower().contains("linux")) {
-            fileList.append({ "PrismLauncher", "bin", "share", "lib" });
+            fileList.append({ "ShardLauncher", "bin", "share", "lib" });
         } else {  // windows by process of elimination
             fileList.append({
                 "jars",
-                "prismlauncher.exe",
-                "prismlauncher_filelink.exe",
-                "prismlauncher_updater.exe",
+                "shardlauncher.exe",
+                "shardlauncher_filelink.exe",
+                "shardlauncher_updater.exe",
                 "qtlogging.ini",
                 "imageformats",
                 "iconengines",

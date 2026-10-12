@@ -149,11 +149,6 @@ class Config {
     QString IMGUR_CLIENT_ID;
 
     /**
-     * Client ID you can get from Microsoft Identity Platform when you register an application
-     */
-    QString MSA_CLIENT_ID;
-
-    /**
      * Client API key for CurseForge
      */
     QString FLAME_API_KEY;
